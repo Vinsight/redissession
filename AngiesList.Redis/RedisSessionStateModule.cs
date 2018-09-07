@@ -6,7 +6,9 @@
 
 using BookSleeve;
 using System;
+using System.Configuration;
 using System.Web;
+using System.Web.Configuration;
 using System.Web.SessionState;
 
 namespace AngiesList.Redis
@@ -31,7 +33,30 @@ namespace AngiesList.Redis
         app.AcquireRequestState += new EventHandler(this.OnAcquireRequestState);
         app.ReleaseRequestState += new EventHandler(this.OnReleaseRequestState);
         app.EndRequest += new EventHandler(this.OnEndRequest);
-        this.sessionIDManager = (ISessionIDManager) new SessionIDManager();
+
+        SessionStateSection sessionState = ConfigurationManager.GetSection("system.web/sessionState") as SessionStateSection;
+
+        string sessionIdManagerType = sessionState?.SessionIDManagerType;
+        ISessionIDManager sessionIdManager;
+
+        if (string.IsNullOrEmpty(sessionIdManagerType))
+        {
+            sessionIdManager = new SessionIDManager();
+        }
+        else
+        {
+            Type type = Type.GetType(sessionIdManagerType, false);
+            if (type != null)
+            {
+                sessionIdManager = Activator.CreateInstance(type) as ISessionIDManager ?? new SessionIDManager();
+            }
+            else
+            {
+                sessionIdManager = new SessionIDManager();
+            }
+        }
+
+        this.sessionIDManager = sessionIdManager;
         this.sessionIDManager.Initialize();
         this.redisConnection = new RedisConnection(this.redisConfig.Host, this.redisConfig.Port, -1, (string) null, int.MaxValue, false, 10000);
         this.initialized = true;
@@ -82,7 +107,7 @@ namespace AngiesList.Redis
       string sessionId = this.sessionIDManager.GetSessionID(context);
       if (sessionId == null)
       {
-        sessionId = this.sessionIDManager.CreateSessionID(context);
+        sessionId = this.sessionIDManager.CreateSessionID(context); 
         bool redirected;
         bool cookieAdded;
         this.sessionIDManager.SaveSessionID(context, sessionId, out redirected, out cookieAdded);
