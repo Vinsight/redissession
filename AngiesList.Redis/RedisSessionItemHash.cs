@@ -17,7 +17,7 @@ namespace AngiesList.Redis
 {
   public sealed class RedisSessionItemHash : NameObjectCollectionBase, ISessionStateItemCollection, ICollection, IEnumerable
   {
-    private IValueSerializer serializer = (IValueSerializer) new ClrBinarySerializer();
+    public IValueSerializer Serializer = (IValueSerializer) new ClrBinarySerializer();
     private IDictionary<string, object> persistentValues = (IDictionary<string, object>) new Dictionary<string, object>();
     private object deserializeLock = new object();
     private HashSet<string> namesAdded = new HashSet<string>();
@@ -73,8 +73,8 @@ namespace AngiesList.Redis
         if (!this.GetRawItems().ContainsKey("val:" + name))
           return;
         byte[] rawItem = this.GetRawItems()["val:" + name];
-        object obj1 = this.serializer.Deserialize(rawItem);
-        object obj2 = this.serializer.Deserialize(rawItem);
+        object obj1 = this.Serializer.Deserialize(rawItem);
+        object obj2 = this.Serializer.Deserialize(rawItem);
         this.BaseSet(name, obj1);
         this.persistentValues.Add(name, obj2);
       }
@@ -104,7 +104,7 @@ namespace AngiesList.Redis
     {
       if (value != null && this.namesAdded.Contains(name) && value.Equals(this.persistentValues.ContainsKey(name) ? this.persistentValues[name] : (object) null))
         return;
-      byte[] bytes = this.serializer.Serialize(value);
+      byte[] bytes = this.Serializer.Serialize(value);
       byte[] numArray;
       if (this.GetRawItems().TryGetValue("val:" + name, out numArray) && ((IEnumerable<byte>) bytes).SequenceEqual<byte>((IEnumerable<byte>) numArray))
         return;
@@ -122,7 +122,7 @@ namespace AngiesList.Redis
         this.rawItems.Add("val:" + name, bytes);
       if (this.persistentValues.ContainsKey(name))
         this.persistentValues.Remove(name);
-      object obj = this.serializer.Deserialize(bytes);
+      object obj = this.Serializer.Deserialize(bytes);
       this.persistentValues.Add(name, obj);
       if (!this.namesAdded.Contains(name))
       {
