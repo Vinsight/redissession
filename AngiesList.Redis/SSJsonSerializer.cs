@@ -23,10 +23,10 @@ namespace AngiesList.Redis
 
     public object Deserialize(byte[] bytes)
     {
-      throw new NotImplementedException();
+        return Deserialize(bytes, typeof(object));
     }
 
-    public object Deserialize(Type type, byte[] bytes)
+    public object Deserialize(byte[] bytes, Type type)
     {
       MemoryStream memoryStream = new MemoryStream(bytes);
       object obj = JsonSerializer.DeserializeFromStream(type, (Stream) memoryStream);

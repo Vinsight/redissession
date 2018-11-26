@@ -94,6 +94,19 @@ namespace AngiesList.Redis
             return this.Deserialize(new ClrBinarySerializer.CacheItem(BitConverter.ToUInt16(bytes, 0), new ArraySegment<byte>(array)));
         }
 
+        public virtual object Deserialize(byte[] bytes, Type type)
+        {
+            var obj = this.Deserialize(bytes);
+            try
+            {
+                return Convert.ChangeType(obj, type);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
         private object Deserialize(ClrBinarySerializer.CacheItem item)
         {
             if (item.Data.Array == null)
