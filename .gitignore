@@ -1,1 +1,5 @@
-/bin
+*/bin/
+*/obj/
+*/.vs/
+*/packages/
+AssemblyInfo.cs
