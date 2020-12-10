@@ -156,8 +156,11 @@ namespace AngiesList.Redis
     {
       if (this.timeoutReset)
         return;
-      this.redis.Keys.Expire(0, this.GetKeyForSession(), this.timeoutMinutes * 60, false);
-      this.timeoutReset = true;
+
+    var expireTask = redis.Keys.Expire(0, this.GetKeyForSession(), timeoutMinutes * 60, false);
+    expireTask.Wait();
+    this.timeoutReset = expireTask.Result;
+
     }
 
     public object this[string name]
